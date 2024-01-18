@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>제품 소개</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-xxx" crossorigin="anonymous" />
+    <style>
+        body {
+            background-color: #f5f5f5;
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            background-color: #87bdd8;
+            color: #fff;
+            padding: 20px;
+            margin: 0;
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 15px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #87bdd8;
+            color: #fff;
+        }
+
+        td {
+            background-color: #f9f9f9;
+        }
+
+        a {
+            text-decoration: none;
+            color: #3498db;
+        }
+
+        .가격 p {
+            color: #e74c3c;
+        }
+
+        p {
+            color: #777;
+        }
+
+        .장바구니-btn, .로그인-btn {
+            background-color: #2ecc71;
+            color: #fff;
+            padding: 10px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>제품 소개</h1>
+
+    <div style="text-align: center; margin-bottom: 20px;">
+        <button class="로그인-btn" onclick="redirectToLoginPage()">로그인</button>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>브랜드</th>
+                <th>제품</th>
+                <th>가격</th>
+                <th>서비스</th>
+                <th>제품 사진</th>
+                <th>간단 설명</th>
+                <th>장바구니</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>삼성</td>
+                <td><a href="https://samsung.com">구매하러 가기</a></td>
+                <td class="가격"><p>₩1,270,000</p></td>
+                <td class="desc"> 삼성서비스</td>
+                <td class="img"> <img src="삼성.jpg" alt="....." height=100px></td>
+                <td>XXX 기능을 갖춘 최고의 제품으로, YYY를 위한 최적의 솔루션을 제공합니다.</td>
+                <td><button class="장바구니-btn" onclick="addToCart('삼성 제품')">장바구니에 추가</button></td>
+            </tr>
+            <tr>
+                <td>애플</td>
+                <td><a href="https://apple.com">구매하러 가기</a></td>
+                <td class="가격"><p>₩2,100,000</p></td>
+                <td class="desc"> 애플서비스</td>
+                <td class="img"> <img src=" 애플.jpg" alt="....." height=100px></td>
+                <td>이런 기능을 갖춘 최고의 제품으로, 사용자를 위한 최적의 솔루션을 제공합니다.</td>
+                <td><button class="장바구니-btn" onclick="addToCart('애플 제품')">장바구니에 추가</button></td>
+            </tr>
+            <tr>
+                <td>샤오미</td>
+                <td><a href="https://xiaomi.com">구매하러 가기</a></td>
+                <td class="가격"><p>₩1,000,000</p></td>
+                <td class="desc"> 샤오미서비스</td>
+                <td class="img"> <img src=" 샤오미.jpg" alt="....." height=100px></td>
+                <td>XXX 기능을 갖춘 최고의 제품으로, YYY를 위한 최적의 솔루션을 제공합니다.</td>
+                <td><button class="장바구니-btn" onclick="addToCart('샤오미 제품')">장바구니에 추가</button></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <script>
+        function addToCart(product) {
+            alert(product + "이(가) 장바구니에 추가되었습니다!");
+            // Add your actual shopping cart logic here
+        }
+
+        function redirectToLoginPage() {
+            window.location.href = "로그인.html";
+        }
+    </script>
+
+    <!-- 다른 제품들도 추가할 수 있습니다. -->
+
+</body>
+</html>
