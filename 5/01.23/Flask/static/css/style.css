@@ -1,0 +1,35 @@
+
+h1{
+    color: white;
+    background : blue;
+    padding-top: 10px;
+    padding-bottom: 10px
+}
+
+table {
+    width: 100%;
+    margin-bottom: 20px;
+    border-collapse: collapse;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    background: #fff;
+}
+
+table th,
+table td {
+    text-align: left;
+    padding: 12px;
+    border: 1px solid #ddd;
+}
+
+table th {
+    background-color: #f8f8f8;
+    color: #333;
+}
+
+table tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+table tr:hover {
+    background-color: #f1f1f1;
+}

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>날씨 데이터</title>
+</head>
+<body>
+    <h1>날씨 데이터</h1>
+    <table border="1">
+        <tr>
+            <th>지점 ID</th>
+            <th>지점 이름</th>
+            <th>날짜</th>
+            <th>평균 기온</th>
+            <th>최저 기온</th>
+            <th>최고 기온</th>
+        </tr>
+        {% for item in weather_data %}
+        <tr>
+            <td>{{ item['stnId'] }}</td>
+            <td>{{ item['stnNm'] }}</td>
+            <td>{{ item['tm'] }}</td>
+            <td>{{ item['avgTa'] }}</td>
+            <td>{{ item['minTa'] }}</td>
+            <td>{{ item['maxTa'] }}</td>
+        </tr>
+{% endfor %}
+
+    </table>
+</body>
+</html>

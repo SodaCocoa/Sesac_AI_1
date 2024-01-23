@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>이미지 테이블</title>
+    <style>
+        table {
+            width: 80%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+            width: 33.33%;
+        }
+        img {
+            max-width: 80%;
+            max-height: 800%;
+            object-fit: contain; /* Maintain aspect ratio and fit within the cell */
+        }
+    </style>
+</head>
+<body>
+<h1>이미지 테이블</h1>
+<table>
+    <tbody>
+        {% for row in range(2) %}
+            <tr>
+                {% for col in range(3) %}
+                    <td>
+                        {% set index = row * 3 + col %}
+                        {% if index < image_files|length %} 
+                            <img src="{{ url_for('static', filename=image_files[index]) }}" alt="{{ image_files[index] }}">
+                            <p>{{ image_files[index].split('.')[0] }}</p> <!-- Use the filename without extension as description -->
+                        {% endif %}
+                    </td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</body>
+</html>
