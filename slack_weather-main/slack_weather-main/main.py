@@ -5,8 +5,8 @@ from weather_info_parser import WeatherInfoParser  # 날씨 정보를 가져오�
 # import os  # 이 코드에서는 사용하지 않으므로 주석 처리했습니다.
 
 # Slack과 통신하기 위한 클라이언트를 설정합니다. '' 안에 실제 토큰 값을 넣어야 합니다.
-rtm = RTMClient(token='xoxb-6555023466485-6557214157829-hqk9aapBWIdm61E3IpM58ybg')
-web_client = WebClient(token='xoxb-6555023466485-6557214157829-hqk9aapBWIdm61E3IpM58ybg')
+rtm = RTMClient(token=' ')
+web_client = WebClient(token=' ')
 weather_info_parser = WeatherInfoParser()  # 날씨 정보를 가져오기 위한 객체를 만듭니다.
 
 # 날씨 정보를 Slack에 보내는 함수입니다.
