@@ -53,6 +53,9 @@ def app():
             if "벌금" in prompt:
                 full_response += "불법 주차에 대한 벌금 부과와 관련하여 이의가 있으시다면, 해당 기관에 문의하여 상황을 설명하고 필요한 절차를 진행해 주시기 바랍니다."
                 message_placeholder.markdown(full_response)
+            elif "벌금" in prompt:
+                full_response += "불법 주차에 대한 벌금 부과와 관련하여 이의가 있으시다면, 해당 기관에 문의하여 상황을 설명하고 필요한 절차를 진행해 주시기 바랍니다."
+                message_placeholder.markdown(full_response)
             else:
                 # OpenAI API를 사용하여 챗봇의 응답을 생성합니다.
                 response = client.chat.completions.create(
