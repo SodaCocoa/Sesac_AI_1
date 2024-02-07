@@ -10,7 +10,7 @@ import openai  # OpenAI API를 사용하기 위한 라이브러리
 from openai import OpenAI  # OpenAI 클래스를 직접 사용하기 위해 임포트
 
 # API 키를 초기화합니다. 보안상의 이유로 실제 키 값을 코드에 직접 넣지 않습니다.
-key = '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'
+key = '  '
 
     
 # Streamlit 앱의 메인 함수입니다.
