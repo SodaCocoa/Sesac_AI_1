@@ -1,3 +1,4 @@
+#chatbot.py
 # 필요한 라이브러리를 임포트합니다.
 from keras.models import load_model  # TensorFlow 백엔드를 사용하는 Keras 모델을 로드하기 위해 필요
 from PIL import Image, ImageOps  # 이미지 처리를 위한 라이브러리, PIL 대신 pillow를 사용
@@ -9,14 +10,16 @@ import openai  # OpenAI API를 사용하기 위한 라이브러리
 from openai import OpenAI  # OpenAI 클래스를 직접 사용하기 위해 임포트
 
 # API 키를 초기화합니다. 보안상의 이유로 실제 키 값을 코드에 직접 넣지 않습니다.
-key = '  '
+key = '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'
 
+    
 # Streamlit 앱의 메인 함수입니다.
 def app():
 
     st.title("🌱💬  SESAC BOT")  # 앱 타이틀 설정
 
     # OpenAI 클라이언트를 초기화합니다.
+
     client = OpenAI(api_key=key)
 
     # Streamlit 세션 상태를 사용하여 챗봇의 메시지 기록을 관리합니다.
@@ -24,14 +27,21 @@ def app():
     if "messages" not in st.session_state or not st.session_state.messages:
         # 초기 메시지로 '불법 주차입니다.'라는 안내 메시지를 추가합니다.
         st.session_state.messages = [
-            {"role": "assistant", "content": "불법 주차가 감지되었습니다. 과태료가 10만원이 발생할 수 있으므로, 즉시 차량을 빼주시기 바랍니다."}
+            {"role": "assistant", "content": "장애인 구역 불법 주차가 감지되었습니다. 과태료가 10만원이 발생할 수 있으므로, 즉시 차량을 빼주시기 바랍니다."}
             ]
-        
+    
+
         
         # 초기 메시지를 화면에 표시합니다.
         #with st.chat_message("assistant"):
             #st.markdown("불법 주차가 감지되었습니다. ")
-
+    st.markdown("<불법주차 교육영상>")
+    st.text("동영상을 시청해주세요")
+    # YouTube 동영상을 추가합니다.
+    st.video("https://www.youtube.com/zrzSL3gzCNo?si=woVtn7Qn5uTqPq1J") 
+    if st.button("새로고침"):
+    # 'image_classifier.py' 파일로 이동
+         st.experimental_rerun()
     # 저장된 챗 메시지를 화면에 표시합니다.
     for message in st.session_state.messages:
         if message["role"] == "system":
@@ -49,11 +59,8 @@ def app():
             message_placeholder = st.empty()  # 응답을 동적으로 업데이트하기 위한 임시 플레이스홀더
             full_response = ""  # 응답 내용을 저장할 변수
 
-            # 사용자 입력에 "불법"이 포함되어 있으면 먼저 챗봇이 "몰루"라고 응답합니다.
+            # 사용자 입력에 "불법"이 포함되어 있으면 먼저 챗봇이 ""라고 응답합니다.
             if "벌금" in prompt:
-                full_response += "불법 주차에 대한 벌금 부과와 관련하여 이의가 있으시다면, 해당 기관에 문의하여 상황을 설명하고 필요한 절차를 진행해 주시기 바랍니다."
-                message_placeholder.markdown(full_response)
-            elif "벌금" in prompt:
                 full_response += "불법 주차에 대한 벌금 부과와 관련하여 이의가 있으시다면, 해당 기관에 문의하여 상황을 설명하고 필요한 절차를 진행해 주시기 바랍니다."
                 message_placeholder.markdown(full_response)
             else:
@@ -77,4 +84,3 @@ def app():
 
         # 챗봇의 응답을 세션 상태에 저장합니다.
         st.session_state.messages.append({"role": "assistant", "content": full_response})
-

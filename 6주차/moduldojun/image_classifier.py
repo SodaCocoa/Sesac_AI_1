@@ -15,7 +15,7 @@ PAGES = {
     "챗봇": chatbot
    
 }
-def classify_waste(img):
+def teachable(img):
     # Disable scientific notation for clarity
     np.set_printoptions(suppress=True)
 
@@ -67,7 +67,7 @@ def app():
         if input_img is not None:
             if st.button("확인"):
                 image_file = Image.open(input_img)
-                label, confidence_score = classify_waste(image_file)
+                label, confidence_score = teachable(image_file)
                 col1, col2 = st.columns([1,1])
 
                 with col1:
@@ -77,13 +77,13 @@ def app():
                 with col2:
                     st.info("결과")
                     image_file = Image.open(input_img)
-                    label, confidence_score = classify_waste(image_file)
-                    if label.strip() == "0 장애인입니다.":
+                    label, confidence_score = teachable(image_file)
+                    if label.strip() == "0 확인되었습니다":
                         st.success("장애인등록 확인이 완료되었습니다.")
                         st.image("sdg goals/pngegg.png", use_column_width=True)
                         ## 여기가 페이지 이동 시킬 코드가 있어야 하는곳 
-                        st.session_state.next_page = "카카오지도"
-                    elif label.strip() == "1 비장애인":
+                        st.session_state.next_page = "요금감면"
+                    elif label.strip() == "1 주차불가능 합니다":
                         st.success("장애인 등록 확인이 불가능합니다.")
                         st.image("sdg goals/pngegg (1).png", use_column_width=True)
                         st.session_state.next_page = "챗봇"
@@ -108,7 +108,7 @@ def app():
                 st.image(pil_frame, use_column_width=True)
 
                 # 프레임을 분류합니다 (classify_waste 함수를 사용할 수 있습니다).
-                x, y = classify_waste(pil_frame)
+                x, y = teachable(pil_frame)
                 co1, co2 = st.columns([1,1])
 
                 with co1:
@@ -118,7 +118,7 @@ def app():
                 with co2:
                     st.info("결과")
     
-                    x, y = classify_waste(pil_frame)
+                    x, y = teachable(pil_frame)
                     if x.strip() == "0 장애인입니다.":
                         st.success("장애인등록 확인이 완료되었습니다.")
                         st.image("sdg goals/pngegg.png", use_column_width=True)
