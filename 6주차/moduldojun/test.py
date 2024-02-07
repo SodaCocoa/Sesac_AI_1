@@ -17,7 +17,7 @@ import sys
 import time
 import folium
 from streamlit_folium import st_folium
-KAKAO_API_KEY="dbbe189cd18054f0ab68f6c59ac3592e"
+KAKAO_API_KEY="  "
 headers = {"Authorization": f"KakaoAK {KAKAO_API_KEY}"}
 def find_nearest_parking(lat, lng):
     url = f"https://dapi.kakao.com/v2/local/search/category.json?category_group_code=PK6&x={lng}&y={lat}&radius=2000"
