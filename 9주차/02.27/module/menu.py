@@ -8,4 +8,4 @@ sys.path.append(path)
 import sysInfoTitle
 #sys.path.append('c:/users/hrPark/desktop/py/')
 python_title_printer=sysInfoTitle.PythonTitlePrinter()
-python_title_printer.sysInfo()
+print(python_title_printer.sysInfo())
