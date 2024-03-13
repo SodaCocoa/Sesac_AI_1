@@ -43,7 +43,7 @@ class CustomDataset(Dataset):
         if self.transform:
             imglike_data = self.transform(imglike_data)
             
-        return imglike_data, torch.tensor(self.labels[idx], dtype=torch.long)
+        return imglike_data, torch.tensor(self.labels[idx], dtype=torch.float32)
 
 
 class TransferResnet18(nn.Module):
@@ -53,8 +53,8 @@ class TransferResnet18(nn.Module):
         num_ftrs = self.trsfRes.fc.in_features
         self.trsfRes.fc = nn.Identity()
         # Dropout 레이어 추가
-        self.dropout = nn.Dropout(0.5)
-        self.output = nn.Linear(num_ftrs, 2) # 소프트맥스는 2
+        # self.dropout = nn.Dropout(0.5)
+        self.output = nn.Linear(num_ftrs, 1) # 소프트맥스는 2
 
         num_params = len(list(self.trsfRes.parameters()))
         layers_to_freeze = int(num_params * tuning_rate)
@@ -66,7 +66,7 @@ class TransferResnet18(nn.Module):
         x = self.trsfRes(x)
         # x = self.dropout(x)# 드롭아웃
         x = self.output(x)
-        # x = torch.softmax(x, dim=1)
+        x = torch.sigmoid(x)
         x = x.squeeze()  #불필요한 차원 제거
         return x
     
@@ -82,9 +82,9 @@ if __name__ == '__main__':
     device = ('cuda' if torch.cuda.is_available() else 'cpu')
 
     parameters = { 
-        'batch_size': [4, 8, 16], # 4,8,16, 32
+        'batch_size': [4,8,16, 32, 64], # 4,8,16, 32
         'lr': [0.00025,0.0001, 0.001, 0.01],  #0.00025가 많이씀   0.01까지
-        'tuning_rate': [0.2, 0.4, 0.6]  # 0.2부터
+        'tuning_rate': [0.2, 0.4, 0.6,0.8]  # 0.2부터
     }
 
     best_accuracy = 0.0
@@ -110,14 +110,15 @@ if __name__ == '__main__':
 
                 model = TransferResnet18(tuning_rate=tuning_rate).to(device)
                 optimizer = optim.Adam(model.parameters(), lr=lr)
-                criterion = nn.CrossEntropyLoss()
-                # criterion = nn.BCELoss()
+                # criterion = nn.CrossEntropyLoss()
+                criterion = nn.BCELoss()
 
                 trial = Trial(model, optimizer, criterion, metrics=['loss', 'accuracy'],callbacks=[early_stopping]).to(device)
                 trial.with_generators(train_generator=train_loader, val_generator=val_loader, test_generator=test_loader)
-                history = trial.run(epochs=100)
+                history = trial.run(epochs=120)
 
                 result = trial.evaluate(data_key=torchbearer.TEST_DATA)
+                #print(result.keys())  # 사용 가능한 모든 키 출력
                 test_accuracy = result['test_binary_acc']
 
                 print(f'Batch Size: {batch_size}, Learning Rate: {lr}, Tuning Rate: {tuning_rate}')
@@ -128,7 +129,7 @@ if __name__ == '__main__':
                     best_history = history[-1]
                     best_parameters = {'batch_size': batch_size, 'lr': lr, 'tuning_rate': tuning_rate}
                     torch.save(model, './conv2d_transfer_best_model.pt')
-
+    
     print("Best Parameters:", best_parameters)
     print("Best Test Accuracy:", best_accuracy)
     print("Best Performance history", best_history)
@@ -140,8 +141,8 @@ if __name__ == '__main__':
 #                           'val_loss': 0.555787980556488, 'val_binary_acc': 0.7749999761581421, 
 #                           'train_steps': 80, 'validation_steps': 10, 
 #                           'test_loss': 0.5686885714530945, 'test_binary_acc': 0.800000011920929}
-
-#'test_loss': 0.5739026665687561, 'test_binary_acc': 0.7749999761581421}
-#'test_loss': 0.6069718599319458, 'test_binary_acc': 0.76249998807
-#'test_loss': 0.5947000980377197, 'test_binary_acc': 0.78125
-#'test_loss': 0.6215370893478394, 'test_binary_acc': 0.737500011920929}
+# Best Parameters: {'batch_size': 32, 'lr': 0.001, 'tuning_rate': 0.8}
+# Best Test Accuracy: 0.7562500238418579
+# Best Performance history {'running_loss': 0.7275447845458984, 'running_acc': 0.6078628897666931, 
+    # 'loss': 0.7226179838180542, 'acc': 0.6153244972229004, 'val_loss': 0.6391624212265015, 'val_acc': 0.6812500357627869, 
+    # 'train_steps': 40, 'validation_steps': 5, 'test_loss': 0.5168395042419434, 'test_acc': 0.7562500238418579}
