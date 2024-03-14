@@ -1,3 +1,4 @@
+# best code
 import numpy as np
 import os
 import pickle
@@ -8,7 +9,7 @@ import torch.optim as optim
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
-pathFolder = "../module_2/wine_quality/"
+pathFolder = "../mod/"
 os.makedirs(pathFolder, exist_ok=True)
 xTrainName = "xTrain1.pkl"
 yTrainName = "yTrain_onehot.pkl"
@@ -35,20 +36,18 @@ class CustomDataset(Dataset):
         data = torch.tensor(data, dtype=torch.float32).unsqueeze(0)
         return data, torch.tensor(self.labels[idx], dtype=torch.float32)
 
-class Conv1DNet(nn.Module):
-    def __init__(self, num_features):
-        super(Conv1DNet, self).__init__()
-        self.conv1 = nn.Conv1d(in_channels=1, out_channels=16, kernel_size=3, stride=1, padding=1)
-        self.conv2 = nn.Conv1d(in_channels=16, out_channels=32, kernel_size=3, stride=1, padding=1)
-        self.fc1 = nn.Linear(32 * num_features, 64)
-        self.fc2 = nn.Linear(64, 2)
+class FCNet(nn.Module):
+    def __init__(self, input_features):
+        super(FCNet, self).__init__()
+        self.fc1 = nn.Linear(input_features, 128)  # Adjust the number of input features accordingly
+        self.fc2 = nn.Linear(128, 64)
+        self.fc3 = nn.Linear(64, 2)  # Assuming binary classification
 
     def forward(self, x):
-        x = torch.relu(self.conv1(x))
-        x = torch.relu(self.conv2(x))
-        x = x.view(x.size(0), -1)
+        x = x.view(x.size(0), -1)  # Flatten the input
         x = torch.relu(self.fc1(x))
-        x = self.fc2(x)
+        x = torch.relu(self.fc2(x))
+        x = self.fc3(x)
         return x
 
 def train_model(model, train_loader, device, optimizer, criterion, epochs):
@@ -80,19 +79,20 @@ def evaluate_model(model, loader, device, criterion):
             loss = criterion(outputs, labels)
             total_loss += loss.item()
             _, predicted = torch.max(outputs.data, 1)
+            _, labels_max = torch.max(labels, 1)  # one-hot 인코딩된 레이블에서 최대값을 가진 인덱스를 찾습니다.
             total += labels.size(0)
-            correct += (predicted == labels).sum().item()
+            correct += (predicted == labels_max).sum().item()  # 예측된 인덱스와 레이블의 인덱스를 비교합니다.
     avg_loss = total_loss / len(loader)
     accuracy = 100 * correct / total
     return accuracy, avg_loss
 
+
 # 메인 실행 블록
 if __name__ == '__main__':
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-    learning_rates = [0.00001, 0.00025, 0.0005]
-    batch_sizes = [8,16,32]
-    epochs = 100
+    learning_rates = [0.0005, 0.00025,0.00001]
+    batch_sizes = [4, 8,16,32,64]
+    epochs = 200
 
     best_accuracy = 0.0
     best_loss = float('inf')
@@ -101,7 +101,7 @@ if __name__ == '__main__':
     for lr in learning_rates:
         for batch_size in batch_sizes:
             print(f"Training with LR={lr}, Batch Size={batch_size}")
-            model = Conv1DNet(num_features=X_train.shape[1]).to(device)
+            model = FCNet(input_features=X_train.shape[1]).to(device)  # 평탄화된 입력에 맞게 조정
             optimizer = optim.Adam(model.parameters(), lr=lr)
             criterion = nn.CrossEntropyLoss()
             train_loader = DataLoader(CustomDataset(X_train, y_train), batch_size=batch_size, shuffle=True)
@@ -118,3 +118,9 @@ if __name__ == '__main__':
 
     print(f"Best Parameters: {best_parameters}")
     print(f"Best Validation Accuracy: {best_accuracy:.2f}%, Loss: {best_parameters['loss']:.4f}")
+
+
+
+
+#     Best Parameters: {'learning_rate': 0.0005, 'batch_size': 4, 'loss': 0.5286541449924698}
+# Best Validation Accuracy: 83.12%, Loss: 0.5287
