@@ -8,26 +8,9 @@ from torch.utils.data import Dataset, DataLoader
 import torch.optim as optim
 from torchvision import transforms
 import torchvision.models as models
-from torchbearer import Trial
-import torchbearer
 from sklearn.model_selection import train_test_split
-from torchbearer import Callback
-from torchbearer.callbacks import EarlyStopping
-pathFolder = "../module_2/wine_quality/"
-os.makedirs(pathFolder,exist_ok=True)
-xTrainName = "xTrain1.pkl"
-yTrainName = "yTrain.pkl"
 
-with open(pathFolder+xTrainName,'rb') as f1:
-    X = pickle.load(f1)
-
-with open(pathFolder+yTrainName,'rb') as f2:
-    y = pickle.load(f2)
-
-X_train, X_tv, y_train, y_tv = train_test_split(X, y, test_size=0.2, random_state=42)
-X_val, X_test, y_val, y_test = train_test_split(X_tv, y_tv, test_size=0.5, random_state=42)
-
-
+# 데이터셋 클래스 정의
 class CustomDataset(Dataset):
     def __init__(self, data, labels, transform=None):
         self.data = data
@@ -38,111 +21,92 @@ class CustomDataset(Dataset):
         return len(self.data)
 
     def __getitem__(self, idx):
-        imglike_data = torch.tensor(self.data[idx], dtype=torch.float32)
-
+        imglike_data = self.data[idx].astype(np.float32)
         if self.transform:
             imglike_data = self.transform(imglike_data)
-            
-        return imglike_data, torch.tensor(self.labels[idx], dtype=torch.float32)
+        label = self.labels[idx]
+        return imglike_data, label
 
-
-class TransferResnet18(nn.Module):
-    def __init__(self, tuning_rate):
-        super(TransferResnet18, self).__init__()
-        self.trsfRes = models.resnet18(pretrained=True)
-        num_ftrs = self.trsfRes.fc.in_features
-        self.trsfRes.fc = nn.Identity()
-        # Dropout 레이어 추가
-        # self.dropout = nn.Dropout(0.5)
-        self.output = nn.Linear(num_ftrs, 1) # 소프트맥스는 2
-
-        num_params = len(list(self.trsfRes.parameters()))
-        layers_to_freeze = int(num_params * tuning_rate)
-
-        for param in list(self.trsfRes.parameters())[:layers_to_freeze]:
-            param.requires_grad = False
-
-    def forward(self, x):
-        x = self.trsfRes(x)
-        # x = self.dropout(x)# 드롭아웃
-        x = self.output(x)
-        x = torch.sigmoid(x)
-        x = x.squeeze()  #불필요한 차원 제거
-        return x
-    
-
-def make_imglike(data, target_size):
-    row = math.ceil(target_size/len(data))
-    imglike_row = np.tile(data, row)[:target_size]
-    imglike = np.tile(imglike_row, (3, target_size, 1))
+# 이미지 형태로 데이터 변환
+def make_imglike(data, target_size=224):
+    row = math.ceil(target_size / data.shape[0])
+    imglike_row = np.tile(data, (row, 1))
+    imglike = np.tile(imglike_row, (3, 1, 1))[:target_size, :target_size, :]
     return imglike
 
+# 모델 정의
+class TransferResnet18(nn.Module):
+    def __init__(self, num_classes):
+        super(TransferResnet18, self).__init__()
+        self.resnet = models.resnet18(pretrained=True)
+        num_ftrs = self.resnet.fc.in_features
+        self.resnet.fc = nn.Linear(num_ftrs, num_classes)
 
+    def forward(self, x):
+        return self.resnet(x)
+
+# 메인 코드
 if __name__ == '__main__':
-    device = ('cuda' if torch.cuda.is_available() else 'cpu')
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    parameters = { 
-        'batch_size': [4,8,16, 32, 64], # 4,8,16, 32
-        'lr': [0.00025,0.0001, 0.001, 0.01],  #0.00025가 많이씀   0.01까지
-        'tuning_rate': [0.2, 0.4, 0.6,0.8]  # 0.2부터
-    }
+    pathFolder = "../module_2/wine_quality/"
+    xTrainName = "xTrain1.pkl"
+    yTrainName = "yTrain_onehot.pkl"
 
-    best_accuracy = 0.0
-    best_parameters = {}
-    # EarlyStopping 콜백 생성
-    early_stopping = EarlyStopping(monitor='val_loss', patience=5, mode='min')
+    with open(os.path.join(pathFolder, xTrainName), 'rb') as f1:
+        X = pickle.load(f1)
 
-    for batch_size in parameters['batch_size']:
-        for lr in parameters['lr']:
-            for tuning_rate in parameters['tuning_rate']:
-                transform = transforms.Compose([
-                    lambda x: make_imglike(x, target_size=32)
-                ])
+    with open(os.path.join(pathFolder, yTrainName), 'rb') as f2:
+        y = pickle.load(f2)  # 원-핫 인코딩된 라벨을 정수 라벨로 변환해야 할 수 있습니다.
 
-                train_dataset = CustomDataset(X_train, y_train, transform=transform)
-                train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    X_train, X_tv, y_train, y_tv = train_test_split(X, y, test_size=0.2, random_state=42)
+    X_val, X_test, y_val, y_test = train_test_split(X_tv, y_tv, test_size=0.5, random_state=42)
 
-                val_dataset = CustomDataset(X_val, y_val, transform=transform)
-                val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True)
+    transform = transforms.Compose([
+        transforms.ToPILImage(),
+        transforms.Resize((224, 224)),
+        transforms.ToTensor(),
+    ])
 
-                test_dataset = CustomDataset(X_test, y_test, transform=transform)
-                test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+    train_dataset = CustomDataset(X_train, y_train, transform=lambda x: transform(make_imglike(x)))
+    val_dataset = CustomDataset(X_val, y_val, transform=lambda x: transform(make_imglike(x)))
+    test_dataset = CustomDataset(X_test, y_test, transform=lambda x: transform(make_imglike(x)))
 
-                model = TransferResnet18(tuning_rate=tuning_rate).to(device)
-                optimizer = optim.Adam(model.parameters(), lr=lr)
-                # criterion = nn.CrossEntropyLoss()
-                criterion = nn.BCELoss()
+    train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False)
+    test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
 
-                trial = Trial(model, optimizer, criterion, metrics=['loss', 'accuracy'],callbacks=[early_stopping]).to(device)
-                trial.with_generators(train_generator=train_loader, val_generator=val_loader, test_generator=test_loader)
-                history = trial.run(epochs=120)
+    num_classes = len(np.unique(y_train))  # 클래스 수 조정 필요
+    model = TransferResnet18(num_classes=num_classes).to(device)
+    optimizer = optim.Adam(model.parameters(), lr=0.001)
+    criterion = nn.CrossEntropyLoss()
 
-                result = trial.evaluate(data_key=torchbearer.TEST_DATA)
-                #print(result.keys())  # 사용 가능한 모든 키 출력
-                test_accuracy = result['test_binary_acc']
+    # 학습 과정
+    epochs = 10
+    for epoch in range(epochs):
+        model.train()
+        running_loss = 0.0
+        for images, labels in train_loader:
+            images = images.to(device)
+            labels = labels.to(device)
+            optimizer.zero_grad()
+            outputs = model(images)
+            loss = criterion(outputs, labels)
+            loss.backward()
+            optimizer.step()
+            running_loss += loss.item()
+        print(f"Epoch {epoch+1}, Loss: {running_loss/len(train_loader)}")
 
-                print(f'Batch Size: {batch_size}, Learning Rate: {lr}, Tuning Rate: {tuning_rate}')
-                print(history[-1])
-
-                if test_accuracy > best_accuracy:
-                    best_accuracy = test_accuracy
-                    best_history = history[-1]
-                    best_parameters = {'batch_size': batch_size, 'lr': lr, 'tuning_rate': tuning_rate}
-                    torch.save(model, './conv2d_transfer_best_model.pt')
-    
-    print("Best Parameters:", best_parameters)
-    print("Best Test Accuracy:", best_accuracy)
-    print("Best Performance history", best_history)
-
-
-# Best Test Accuracy: 0.800000011920929
-# Best Performance history {'running_loss': 0.2882416546344757, 'running_binary_acc': 0.8837500214576721, 
-#                           'loss': 0.2915509343147278, 'binary_acc': 0.8803752660751343, 
-#                           'val_loss': 0.555787980556488, 'val_binary_acc': 0.7749999761581421, 
-#                           'train_steps': 80, 'validation_steps': 10, 
-#                           'test_loss': 0.5686885714530945, 'test_binary_acc': 0.800000011920929}
-# Best Parameters: {'batch_size': 32, 'lr': 0.001, 'tuning_rate': 0.8}
-# Best Test Accuracy: 0.7562500238418579
-# Best Performance history {'running_loss': 0.7275447845458984, 'running_acc': 0.6078628897666931, 
-    # 'loss': 0.7226179838180542, 'acc': 0.6153244972229004, 'val_loss': 0.6391624212265015, 'val_acc': 0.6812500357627869, 
-    # 'train_steps': 40, 'validation_steps': 5, 'test_loss': 0.5168395042419434, 'test_acc': 0.7562500238418579}
+    # 평가 과정
+    model.eval()
+    total = 0
+    correct = 0
+    with torch.no_grad():
+        for images, labels in test_loader:
+            images = images.to(device)
+            labels = labels.to(device)
+            outputs = model(images)
+            _, predicted = torch.max(outputs.data, 1)
+            total += labels.size(0)
+            correct += (predicted == labels).sum().item()
+    print(f"Accuracy on test set: {100 * correct / total}%")

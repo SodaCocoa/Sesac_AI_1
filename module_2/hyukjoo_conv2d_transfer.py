@@ -16,7 +16,7 @@ from torchbearer.callbacks import EarlyStopping
 pathFolder = "../module_2/wine_quality/"
 os.makedirs(pathFolder,exist_ok=True)
 xTrainName = "xTrain1.pkl"
-yTrainName = "yTrain.pkl"
+yTrainName = "yTrain_onehot.pkl"
 
 with open(pathFolder+xTrainName,'rb') as f1:
     X = pickle.load(f1)
@@ -46,21 +46,16 @@ class CustomDataset(Dataset):
         return imglike_data, torch.tensor(self.labels[idx], dtype=torch.float32)
 
 
-class FCResnet18(nn.Module):
-    def __init__(self, tuning_rate, num_hidden_units):
-        super(FCResnet18, self).__init__()
+class TransferResnet18(nn.Module):
+    def __init__(self, tuning_rate):
+        super(TransferResnet18, self).__init__()
         self.trsfRes = models.resnet18(pretrained=True)
         num_ftrs = self.trsfRes.fc.in_features
-        self.trsfRes.fc = nn.Identity()  # 기존의 fully connected 레이어를 제거
+        self.trsfRes.fc = nn.Identity()
+        # Dropout 레이어 추가
+        # self.dropout = nn.Dropout(0.5)
+        self.output = nn.Linear(num_ftrs, 2) # 소프트맥스는 2
 
-        self.fc = nn.Sequential(
-            nn.Linear(num_ftrs, num_hidden_units),
-            nn.ReLU(),
-            nn.Dropout(0.5),
-            nn.Linear(num_hidden_units, 1)
-        )
-
-        # Freeze the layers according to the tuning_rate
         num_params = len(list(self.trsfRes.parameters()))
         layers_to_freeze = int(num_params * tuning_rate)
 
@@ -69,11 +64,11 @@ class FCResnet18(nn.Module):
 
     def forward(self, x):
         x = self.trsfRes(x)
-        x = self.fc(x)
+        # x = self.dropout(x)# 드롭아웃
+        x = self.output(x)
         x = torch.sigmoid(x)
-        x = x.squeeze()  # 불필요한 차원 제거
+        x = x.squeeze()  #불필요한 차원 제거
         return x
-
     
 
 def make_imglike(data, target_size):
@@ -87,7 +82,7 @@ if __name__ == '__main__':
     device = ('cuda' if torch.cuda.is_available() else 'cpu')
 
     parameters = { 
-        'batch_size': [8,16, 32, 64], # 4,8,16, 32
+        'batch_size': [64,4,8,16, 32, 64], # 4,8,16, 32
         'lr': [0.00025,0.0001, 0.001, 0.01],  #0.00025가 많이씀   0.01까지
         'tuning_rate': [0.2, 0.4, 0.6,0.8]  # 0.2부터
     }
@@ -113,15 +108,14 @@ if __name__ == '__main__':
                 test_dataset = CustomDataset(X_test, y_test, transform=transform)
                 test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
-                # 인스턴스 생성 시 num_hidden_units 인자를 포함하여 제공
-                model = FCResnet18(tuning_rate=0.5, num_hidden_units=512).to(device)
+                model = TransferResnet18(tuning_rate=tuning_rate).to(device)
                 optimizer = optim.Adam(model.parameters(), lr=lr)
                 # criterion = nn.CrossEntropyLoss()
                 criterion = nn.BCELoss()
 
                 trial = Trial(model, optimizer, criterion, metrics=['loss', 'accuracy'],callbacks=[early_stopping]).to(device)
                 trial.with_generators(train_generator=train_loader, val_generator=val_loader, test_generator=test_loader)
-                history = trial.run(epochs=120)
+                history = trial.run(epochs=12)
 
                 result = trial.evaluate(data_key=torchbearer.TEST_DATA)
                 #print(result.keys())  # 사용 가능한 모든 키 출력
@@ -147,8 +141,9 @@ if __name__ == '__main__':
 #                           'val_loss': 0.555787980556488, 'val_binary_acc': 0.7749999761581421, 
 #                           'train_steps': 80, 'validation_steps': 10, 
 #                           'test_loss': 0.5686885714530945, 'test_binary_acc': 0.800000011920929}
-
-#'test_loss': 0.5739026665687561, 'test_binary_acc': 0.7749999761581421}
-#'test_loss': 0.6069718599319458, 'test_binary_acc': 0.76249998807
-#'test_loss': 0.5947000980377197, 'test_binary_acc': 0.78125
-#'test_loss': 0.6215370893478394, 'test_binary_acc': 0.737500011920929}
+    
+# Best Parameters: {'batch_size': 32, 'lr': 0.001, 'tuning_rate': 0.8}
+# Best Test Accuracy: 0.7562500238418579
+# Best Performance history {'running_loss': 0.7275447845458984, 'running_acc': 0.6078628897666931, 
+    # 'loss': 0.7226179838180542, 'acc': 0.6153244972229004, 'val_loss': 0.6391624212265015, 'val_acc': 0.6812500357627869, 
+    # 'train_steps': 40, 'validation_steps': 5, 'test_loss': 0.5168395042419434, 'test_acc': 0.7562500238418579}

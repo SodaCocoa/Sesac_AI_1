@@ -11,7 +11,7 @@ from torch.optim.lr_scheduler import StepLR
 import pickle
 pathFolder = "./wine_quality/"
 xTrainName = "xTrain1.pkl"
-yTrainName = "yTrain.pkl"
+yTrainName = "yTrain_onehot.pkl"
 with open(pathFolder+xTrainName,'rb') as f1:
     X = pickle.load(f1)
 with open(pathFolder+yTrainName,'rb') as f2:

@@ -106,8 +106,8 @@ def main():
     X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.1, random_state=42)  # 데이터 분할
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')  # 디바이스 설정
-    learning_rates = [0.0005, 0.00025,0.00001] #학습률
-    batch_sizes = [4, 8,16,32,64] # 배치크기
+    learning_rates = [0.0005, 0.00025,0.00001,0.0001] #학습률
+    batch_sizes = [2,4, 8,16,32,64] # 배치크기
     epochs = 200 #에폭수
 
     best_accuracy = 0.0  # 최고 정확도
@@ -136,3 +136,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+# Best Parameters: {'learning_rate': 0.0005, 'batch_size': 32, 'loss': 0.45122678875923156}
+# Best Validation Accuracy: 81.25%, Loss: 0.4512
