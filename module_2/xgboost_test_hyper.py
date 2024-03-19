@@ -6,10 +6,11 @@ from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.metrics import accuracy_score
 
 
-pathFolder = "./train/"
-os.makedirs(pathFolder,exist_ok=True)
-xTrainName = "winexTrain1.pkl"
-yTrainName = "wineyTrain1.pkl"
+
+pathFolder = "../module_2/wine_quality/"  # 데이터 저장 폴더
+os.makedirs(pathFolder, exist_ok=True)  # 폴더 생성 (이미 존재하면 무시)
+xTrainName = "xTrain1.pkl"  # 학습 데이터 파일명
+yTrainName = "yTrain_onehot.pkl"  # 레이블 데이터 파일명
 with open(pathFolder+xTrainName,'rb') as f1:
     X = pickle.load(f1)
 
@@ -55,3 +56,10 @@ print("Accuracy: %.2f%%" % (accuracy * 100.0))
 
 best_model.save_model('best_model.xgb') 
 #Accuracy: 83.12%
+
+
+#Best parameters found:  
+#{'colsample_bytree': 1.0, 'gamma': 0, 'learning_rate': 0.1, 
+# 'max_depth': 5, 'n_estimators': 200, 'reg_alpha': 0, 'reg_lambda': 10,
+ #  'subsample': 1.0}
+#Accuracy: 81.88%

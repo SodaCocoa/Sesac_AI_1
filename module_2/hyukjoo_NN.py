@@ -138,3 +138,12 @@ if __name__ == '__main__':
     main()
 # Best Parameters: {'learning_rate': 0.0005, 'batch_size': 32, 'loss': 0.45122678875923156}
 # Best Validation Accuracy: 81.25%, Loss: 0.4512
+    '''
+Batch Size: 64, Learning Rate: 0.00025, Tuning Rate: 0.2
+{'running_loss': 0.2570601999759674, 'running_binary_acc': 0.8943129777908325, 'loss': 0.22813303768634796, 
+ 'binary_acc': 0.9034401774406433, 'val_loss': 0.7092078328132629, 'val_binary_acc': 0.753125011920929, 
+ 'train_steps': 20, 'validation_steps': 3, 'test_loss': 0.507718563079834, 'test_binary_acc': 0.831250011920929}
+ 
+ '''
+    
+    
