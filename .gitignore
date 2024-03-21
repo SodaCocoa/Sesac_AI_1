@@ -1,2 +1,5 @@
 
 *.csv
+module_2/best_model_0.0005_2.pth
+module_2/best_model_0.00025_16_0.6.pth
+*.pth
